@@ -2,7 +2,8 @@ import sys
 import pygame as pg
 import yaml
 from environment.env import Environment
-from agents.agents import Eater, Seeker, Hunter, Pursuer, Catcher
+from agents.agents import Eater, Seeker
+from random import choice
 
 if not pg.font:
     print("Warning, fonts disabled")
@@ -18,28 +19,27 @@ with open("conf/conf.yaml") as f:
 env = Environment()
 env.fill_matrix(config["height"], config["width"], config["tile_size"])
 env.load_layout(config["default_layout"])   
-      
+walkable_tiles = [tile for row in env.grid for tile in row if tile.walkable]      
         
-eater = Eater(5,5,env)
-seeker = Seeker(20,6,env)
-hunter = Seeker(20,6,env)
-pursuer = Seeker(20,6,env)
-catcher = Seeker(20,6,env)
-
-eater_list = [eater]
-#chasers_list = [seeker]
-chasers_list = [seeker, hunter, pursuer, catcher]
+eater_spawn_tile = choice(walkable_tiles) 
+eater = Eater(eater_spawn_tile.y, eater_spawn_tile.x, env)
+chasers_list = []
+for agent in range(config["amount_of_seekers"]):
+    chaser_spawn_tile = choice(walkable_tiles)  
+    chasers_list.append(Seeker(chaser_spawn_tile.y, chaser_spawn_tile.x, env))  
 
 # --- Setup display ---
-screen = pg.display.set_mode((config["width"] * config["tile_size"], config["height"] * config["tile_size"]))
+information_panel_width = 300
+screen = pg.display.set_mode(((config["width"] * config["tile_size"]) + information_panel_width, config["height"] * config["tile_size"]))
 pg.display.set_caption("Grid with Walls")
 
 clock = pg.time.Clock()
 last_move_time = 0 
-move_delay = 100    
+move_delay = 100 # Increase to speed down
 
 
-DEBUG = True  
+
+DEBUG = False  
 font = pg.font.SysFont(None, 25)
 
 running = True
@@ -80,7 +80,7 @@ while running:
                         heat_surface = pg.Surface((tile.rect.width, tile.rect.height), pg.SRCALPHA)
                         heat_surface.fill((intensity, 0, 0, 255))
                         screen.blit(heat_surface, (tile.rect.x, tile.rect.y))      
-                        text = font.render(f"{int(node.threat_level)}", True, (255, 255, 255))
+                        text = font.render("", True, (255, 255, 255))
                         screen.blit(text, (tile.rect.x + 2, tile.rect.y + 2))
     
         # Update graph with current ghost positions and threat levels
@@ -88,18 +88,31 @@ while running:
     
         # Move agents with time delay        
         current_time = pg.time.get_ticks()
-        if current_time - last_move_time >= move_delay:
-            for agent in eater_list + chasers_list:
-                agent.move(env.current_graph)
-    
+        
+        if current_time - last_move_time >= move_delay:            
+            eater.move(env.current_graph)    
+            for agent in chasers_list:
+                if agent.current_state_duration <= 0:
+                    agent.current_state = choice([state for state in agent.states if state != agent.current_state])           
+                    agent.reset_current_state_duration()
+                agent.move(env.current_graph, eater.current_position)
+                agent.current_state_duration -= 1                    
+                
+                # Check if this chaser collided with the eater after moving
+                if agent.current_position == eater.current_position:
+                    game_over = True
+                    winner = "chaser"                    
+                    break
     
             # Pacman consumes pellet
-            env.grid[eater.current_position[0]][eater.current_position[1]].has_pellet = False
+            if not game_over:   
+               env.grid[eater.current_position[0]][eater.current_position[1]].has_pellet = False
     
             last_move_time = current_time
     
         # Draw agents
-        for agent in eater_list + chasers_list:
+        eater.draw(screen)        
+        for agent in chasers_list:
             agent.draw(screen)
             
         # Count pellets. If no pelles then eater wins
@@ -110,25 +123,50 @@ while running:
         if len(nodes_with_pellets) == 0:
             game_over = True
             winner = "eater"
+            break
             
-        # Check if eater and chaser share position. If they do eater losses
-        for eater in eater_list:
-            for chaser in chasers_list:
-                if eater.current_position == chaser.current_position:
-                    game_over = True
-                    winner = "chaser"
+        # Check if eater and chaser share position. If they do eater losses       
+        for chaser in chasers_list:
+            if eater.current_position == chaser.current_position:
+                game_over = True
+                winner = "chaser"
+                break
+                
+                
+        # Draw Panel Information        
+        circle_radius = 8  # size of the color circle
+        circle_margin = 5  # space between circle and text
+        space_between_lines = 60
         
-    if game_over:   
+       
+        all_agents = [eater] + chasers_list        
+        for i, agent in enumerate(all_agents):
+            y = 200 + i * space_between_lines  # vertical position
+        
+            # Draw color circle
+            information_panel_starting_x = 730 # horizontal position
+            information_panel_starting_y = y
+            pg.draw.circle(screen, agent.color, (information_panel_starting_x, information_panel_starting_y), circle_radius)
+        
+            # Draw agent name and state
+            text = font.render(f"{agent.name}: {agent.current_state}", True, (0, 0, 0))
+            text_rect = text.get_rect(midleft=(information_panel_starting_x + circle_radius + circle_margin, y))
+            screen.blit(text, text_rect)    
+            
+
+
+    if game_over:           
         if winner == "eater":     
             game_over_message = "Eater Won"
         elif winner == "chaser":     
             game_over_message = "chaser Won"        
         text = font.render(game_over_message, True, (255, 0, 0))
         text_rect = text.get_rect(center=(320, 240))
-        screen.blit(text, text_rect)        
-
+        screen.blit(text, text_rect)   
+        
     pg.display.flip()
-    clock.tick(60)
+    clock.tick(60)    
+        
 
 pg.quit()
 sys.exit()
