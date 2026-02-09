@@ -35,11 +35,11 @@ pg.display.set_caption("Grid with Walls")
 
 clock = pg.time.Clock()
 last_move_time = 0 
-move_delay = 100 # Increase to speed down
+move_delay = 200 # Increase to speed down
 
 
 
-DEBUG = False  
+DEBUG = True  
 font = pg.font.SysFont(None, 25)
 
 running = True
@@ -83,7 +83,7 @@ while running:
                         text = font.render("", True, (255, 255, 255))
                         screen.blit(text, (tile.rect.x + 2, tile.rect.y + 2))
     
-        # Update graph with current ghost positions and threat levels
+        # Update graph with current seekers positions and threat levels
         env.create_graph(threat_agents = chasers_list, max_threat_level = config["max_threat_level"], decay_rate = config["decay_rate"])
     
         # Move agents with time delay        
@@ -104,7 +104,7 @@ while running:
                     winner = "chaser"                    
                     break
     
-            # Pacman consumes pellet
+            # Eater consumes pellet
             if not game_over:   
                env.grid[eater.current_position[0]][eater.current_position[1]].has_pellet = False
     

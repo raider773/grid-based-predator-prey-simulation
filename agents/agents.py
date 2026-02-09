@@ -5,19 +5,6 @@ import heapq
 
 
 pg.init()
-
-
-
-#agregar velocidades en algun momento (no mas casillas, sino mas movimientos mientras lkos otros estan quietos sria creo)
-
-
-#finite state machine (FSM):
-    #- Pacman [eat]
-    #- chasers [idle, chase, patrol]
-    
-    
-#Add small randomness or “hesitation” to humanize them.
-
     
 class Agent:
     """
@@ -223,6 +210,26 @@ class Seeker(Agent):
     
     
     def _search_eater(self, graph, eater_position):
+        
+        """
+        A* SEARCH ALGORITHM
+
+        Finds the optimal next move toward the closest pellet.
+
+        Cost function:
+            f(n) = g(n) + h(n)
+
+        where:
+            g(n) = distance from start
+            h(n) = Manhattan distance to nearest pellet            
+
+        Args:
+            eater_position (tuple): Current position attribute from eater
+            graph (dict): Grid graph with adjacency and tile metadata.
+
+        Returns:
+            tuple[int, int]: Next position to move to.
+        """
         
         starting_position = self.current_position
     

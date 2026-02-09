@@ -4,8 +4,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from environment.env import Environment
 from agents.agents import Eater, Seeker
 
-def run_environment(config_path="conf/conf.yaml"):
-    # Load configuration
+def run_environment(config_path="conf/conf.yaml"):    
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
