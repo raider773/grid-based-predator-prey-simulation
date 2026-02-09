@@ -52,7 +52,6 @@ The standard view of the simulation.
 - The eater navigates the grid using A\* to locate and consume pellets.  
 - Seekers patrol and chase the eater based on their current state.  
 
-**GIF Placeholder:**  
 ![Normal Gameplay](assets/normal.gif)
 
 ---
@@ -65,7 +64,6 @@ The same simulation with **threat levels enabled**.
 - Threat values are influenced by seeker positions and decay based on decay factor YAML.  
 - The eater uses this information to avoid high-risk paths.
 
-**GIF Placeholder:**  
 ![Threat Heatmap Gameplay](assets/threat.gif)
 
 ---
