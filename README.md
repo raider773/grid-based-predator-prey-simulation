@@ -1,7 +1,7 @@
 # Grid-Based Predator–Prey Simulation
 
 
-This project is a **grid-based simulation game built with Pygame** that models interactions between one **Eater** agent and multiple **Seeker** agents on a tiled environment. Agents navigate the map using **A\*** pathfinding while responding to dynamic threat levels and state-based behaviors.
+This project is a **grid-based simulation built with Pygame** that models interactions between one **Eater** agent and multiple **Seeker** agents on a tiled environment. Agents navigate the map using **A\*** pathfinding while responding to dynamic threat levels and state-based behaviors.
 
 ---
 
